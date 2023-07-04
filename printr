@@ -1,0 +1,42 @@
+#!/usr/bin/env zsh
+
+CWD="${1:-$(pwd)}"
+IGNORE_PATTERNS=(
+  ".git"
+  "node_modules"
+  "package-lock.json"
+)
+
+# Function to check if a file is ignored by git
+is_ignored() {
+  local file="$1"
+  for pattern in "${IGNORE_PATTERNS[@]}"; do
+    if [[ "$file" == *"$pattern" ]]; then
+      return 0
+    fi
+  done
+  return 1
+}
+
+# Function to process files recursively
+process_directory() {
+  local dir="$1"
+
+  for file in "$dir"/*; do
+    if [ -f "$file" ]; then
+      if ! is_ignored "$file"; then
+        echo "$file" | sed "s|$CWD|.|g"
+        sed 's/^/  /' "$file"
+        echo
+      fi
+    elif [ -d "$file" ]; then
+      if ! is_ignored "$dir/$file"; then
+        process_directory "$file"
+      fi
+    fi
+  done
+}
+
+
+# Start processing from the current directory
+process_directory "$CWD"
